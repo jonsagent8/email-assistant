@@ -40,6 +40,7 @@ pub struct AccountInfo {
 /// persisting anything, then stores the password only in the OS keychain —
 /// the SQLite row never contains a secret.
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // one arg per account field; the setup form sends them flat
 pub async fn add_account(
     state: State<'_, AppState>,
     email: String,

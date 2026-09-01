@@ -49,6 +49,43 @@ pub fn detect_provider(email: &str) -> Option<ProviderPreset> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detect_provider_matches_gmail_and_its_aliases() {
+        let g = detect_provider("someone@gmail.com").unwrap();
+        assert_eq!(g.imap_host, "imap.gmail.com");
+        assert_eq!(g.imap_port, 993);
+        assert_eq!(g.smtp_port, 587);
+        assert!(detect_provider("someone@googlemail.com").is_some());
+    }
+
+    #[test]
+    fn detect_provider_is_case_insensitive_on_domain() {
+        assert!(detect_provider("Someone@ICLOUD.com").is_some());
+    }
+
+    #[test]
+    fn detect_provider_covers_outlook_yahoo_icloud_families() {
+        for addr in [
+            "a@outlook.com", "a@hotmail.com", "a@live.com", "a@msn.com",
+            "a@yahoo.com", "a@ymail.com",
+            "a@icloud.com", "a@me.com", "a@mac.com",
+        ] {
+            assert!(detect_provider(addr).is_some(), "{addr} should be known");
+        }
+    }
+
+    #[test]
+    fn detect_provider_returns_none_for_unknown_or_malformed() {
+        assert!(detect_provider("a@example.com").is_none());
+        assert!(detect_provider("not-an-email").is_none());
+        assert!(detect_provider("").is_none());
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct FetchedEmail {
     pub uid: u32,
@@ -162,6 +199,6 @@ pub async fn fetch_recent_inbox(
     }
 
     session.logout().await.ok();
-    results.sort_by(|a, b| b.uid.cmp(&a.uid));
+    results.sort_by_key(|m| std::cmp::Reverse(m.uid));
     Ok(results)
 }

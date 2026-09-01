@@ -25,6 +25,9 @@ pub fn get_password(email: &str, purpose: &str) -> Result<String, String> {
         .map_err(|e| e.to_string())
 }
 
+/// Kept for the not-yet-built "remove account" flow, which must clear both the
+/// `imap` and `smtp` keychain entries.
+#[allow(dead_code)]
 pub fn delete_password(email: &str, purpose: &str) -> Result<(), String> {
     entry(email, purpose)?
         .delete_credential()
